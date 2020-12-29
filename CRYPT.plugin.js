@@ -1,6 +1,7 @@
 /**
  * @name CRYPT
  * @author Flo
+ * @updateUrl https://raw.githubusercontent.com/flolep2607/discordcrypt/main/CRYPT.plugin.js?token=AF3NZNCQY4MZ42VMZ7LVKRC76TBOQ
  */
 
 const { clearInterval } = require("timers");
@@ -185,7 +186,7 @@ module.exports = (_ => {
                 // this.boucle=setInterval(() => {
                 //     this.decryptall();
                 // },5000);
-                this.decryptall();
+                // this.decryptall();
             }
             processChannelTextAreaForm(e) {
                 // console.log(e);
