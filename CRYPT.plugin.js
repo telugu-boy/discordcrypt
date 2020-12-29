@@ -1,6 +1,9 @@
 /**
  * @name CRYPT
  * @author Flo
+ * @authorId 566580404279181341
+ * @invite ckdw3h2zn5
+ * @source https://github.com/flolep2607/discordcrypt/blob/main/CRYPT.plugin.js
  * @updateUrl https://raw.githubusercontent.com/flolep2607/discordcrypt/main/CRYPT.plugin.js?token=AF3NZNCQY4MZ42VMZ7LVKRC76TBOQ
  */
 
