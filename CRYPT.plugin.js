@@ -11,7 +11,7 @@ module.exports = (_ => {
         "info": {
             "name": "CryptonaTor",
             "author": "Flo",
-            "version": "0.0.6 realease",
+            "version": "1.0.8",
             "description": "Encrypt message"
         }
     };
@@ -77,46 +77,17 @@ module.exports = (_ => {
                 this.patchedModules = {
                     before: {
                         ChannelTextAreaForm: "render",
-                        // ChannelEditorContainer: "render"
                     },
                     after: {
                         Messages: "type",
                         ChannelTextAreaForm: "render",
-                    //     ChannelTextAreaContainer: "render",
                     }
                 };
-                // if(this.boucle!=null){try{clearInterval(this.boucle)}catch(err){}}
-                // this.decryptall();
-                // this.boucle=setInterval(() => {
-                //     this.decryptall();
-                // },5000);
             }
-            // decryptall(){  
-            //     // var other_KEY=document.querySelector('a.da-selected div[role="img"]').getAttribute("user_by_bdfdb");
-            //     document.querySelectorAll('div.messageContent-2qWWxC').forEach((text)=>{
-            //         if(text.querySelector('img[alt=":lock:"]')){
-            //             // console.log(text.parentNode.parentNode);
-            //             // text.parentNode.parentNode.removeChild(text.parentNode);
-            //             console.log(text.parentNode.parentNode.getAttribute("user_by_bdfdb"))
-            //             if(text.parentNode.parentNode.getAttribute("user_by_bdfdb")!=USER_KEY){
-            //                 console.log(text.innerText,other_KEY,USER_KEY)
-            //                 text.innerText=this.decrypt(text.innerText,other_KEY+USER_KEY)
-            //             }else{
-            //                 console.log(text.innerText,USER_KEY,other_KEY)
-            //                 text.innerText=this.decrypt(text.innerText,USER_KEY+other_KEY)
-            //             }
-            //         }
-            //     })
-            // }
 
             onStop() {
-                // clearInterval(this.boucle);
-                // this.boucle=null;
                 BDFDB.PatchUtils.forceAllUpdates(this);
             }
-            // onSwitch(a){
-            //     this.decryptall();
-            // }
             encrypt(msg,key){
                 var temp = CryptoJS.AES.encrypt(msg, key);
                 return temp.toString();
@@ -140,30 +111,12 @@ module.exports = (_ => {
                 console.log(">>",messagesIns.props);
 				if (BDFDB.ObjectUtils.is(messagesIns.props.messages) && BDFDB.ArrayUtils.is(messagesIns.props.messages._array)) {
                     let messages = messagesIns.props.messages;
-                    // let OTHER_KEY=messagesIns.props.channel.rawRecipients[0].id;
-                    // messagesIns.props.messages = new BDFDB.DiscordObjects.Messages(messages);
-                    // messages.forEach(msg=>{
-                    //     if(msg.content.startsWith("🔒")){
-                    //         console.log(msg.content,msg.channel_id,msg.author.id);
-                    //     }
-                    // })
-                    // console.log(messagesIns);
                     messagesIns.props.messages._array.forEach((msg, index) => {
                         if(msg.content.startsWith("🔒")){
                             console.log("🔒",msg.channel_id);
                             messagesIns.props.messages._array[index].content ="🔓"+this.decrypt(msg.content.substring(2),msg.channel_id);
-                            // if(msg.author.id==USER_KEY){
-                            //     console.log(msg.content.substring(2),USER_KEY,OTHER_KEY)
-                            //     messagesIns.props.messages._array[index].content =this.decrypt(msg.content.substring(2),USER_KEY+OTHER_KEY);
-                            // }else{
-                            //     console.log(msg.content.substring(2),OTHER_KEY,USER_KEY)
-                            //     messagesIns.props.messages._array[index].content =this.decrypt(msg.content.substring(2),OTHER_KEY+USER_KEY);
-                            // }
-                            // messagesIns.props.messages._array[index].content = msg.content.substring(1);
                         }
                     });
-					// messagesIns.props.messages._array = [].concat(messagesIns.props.messages._array.filter(n => n.author && !BDFDB.LibraryModules.FriendUtils.isBlocked(n.author.id)));
-					// if (messagesIns.props.oldestUnreadMessageId && messagesIns.props.messages._array.every(n => n.id != messagesIns.props.oldestUnreadMessageId)) messagesIns.props.oldestUnreadMessageId = null;
 				}
             }
             onStart() {
@@ -173,13 +126,15 @@ module.exports = (_ => {
                         // const OTHER_KEY=document.querySelector('a.da-selected div[role="img"]').getAttribute("user_by_bdfdb");
                         const KEY=document.querySelector("div.da-selected").getAttribute("href").split("/")[3];
                         if(e.methodArguments[2].content.startsWith("!")){
-                            e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content,KEY);
+                            e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content.substring(1),KEY);
                             // e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content,USER_KEY+OTHER_KEY);
                         }
                     }});
-                    // BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.MessageUtils, "startEditMessage", {before: e => {
-                    //     e.methodArguments[1]=!+e.methodArguments[1];
-                    // }});
+                    BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.MessageUtils, "startEditMessage", {before: e => {
+                        if(e.methodArguments[1].startsWith("🔓")){
+                            e.methodArguments[1]=!+e.methodArguments[1].substring(2);
+                        }
+                    }});
                 // }
                 BDFDB.PatchUtils.forceAllUpdates(this);
                 // if(this.boucle!=null){try{clearInterval(this.boucle)}catch(err){}}
