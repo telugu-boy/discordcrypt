@@ -4,21 +4,28 @@
  * @authorId 566580404279181341
  * @invite ckdw3h2zn5
  * @source https://github.com/flolep2607/discordcrypt/blob/main/CRYPT.plugin.js
- * @updateUrl https://raw.githubusercontent.com/flolep2607/discordcrypt/main/CRYPT.plugin.js?token=AF3NZNCQY4MZ42VMZ7LVKRC76TBOQ
+ * @updateUrl https://raw.githubusercontent.com/flolep2607/discordcrypt/main/CRYPT.plugin.js
  */
 
-const { clearInterval } = require("timers");
+const { clearInterval, setTimeout } = require("timers");
+var script1 = document.createElement("script");
+script1.type = "text/javascript";
+script1.src = "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js";
+document.head.appendChild(script1);
+// var script2 = document.createElement("script");
+// script2.type = "text/javascript";
+// script2.src = "https://rawcdn.githack.com/flolep2607/discordcrypt/fd25d4a4c4c92fe2f17b69be53274001b4facfea/cryptobfuscatoraddon.js";
+// document.head.appendChild(script2);
 
 module.exports = (_ => {
     const config = {
         "info": {
             "name": "CryptonaTor",
             "author": "Flo",
-            "version": "1.0.8",
+            "version": "1.1.0",
             "description": "Encrypt message"
         }
     };
-
     return !window.BDFDB_Global || (!window.BDFDB_Global.loaded && !window.BDFDB_Global.started) ? class {
         getName() {
             return config.info.name;
@@ -58,6 +65,10 @@ module.exports = (_ => {
         }
         start() {
             this.load();
+            // var script1 = document.createElement("script");
+            // script1.type = "text/javascript";
+            // script1.src = "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js";
+            // document.head.appendChild(script1);
         }
         stop() {}
         getSettingsPanel() {
@@ -74,7 +85,6 @@ module.exports = (_ => {
     } : (([Plugin, BDFDB]) => {
         const messageDelay = 1000; //changing at own risk, might result in bans or mutes
         const USER_KEY=document.querySelector('section.da-panels div.da-container img').getAttribute("src").split("/")[4];
-
         return class CryptonaTor extends Plugin {
             onLoad() {
                 this.patchedModules = {
@@ -86,6 +96,16 @@ module.exports = (_ => {
                         ChannelTextAreaForm: "render",
                     }
                 };
+                function triling(i) {
+                    console.log(i)
+                    setTimeout(function () {
+                        BdApi.findModuleByProps("playSound").playSound(`message${i%3+1}`, 0.4)
+                    }, i*5);
+                }
+
+                for (var i = 0; i < 10; i++){
+                    triling(i);
+                }
             }
 
             onStop() {
@@ -116,7 +136,7 @@ module.exports = (_ => {
                     let messages = messagesIns.props.messages;
                     messagesIns.props.messages._array.forEach((msg, index) => {
                         if(msg.content.startsWith("🔒")){
-                            console.log("🔒",msg.channel_id);
+                            // console.log("🔒",msg.channel_id);
                             messagesIns.props.messages._array[index].content ="🔓"+this.decrypt(msg.content.substring(2),msg.channel_id);
                         }
                     });
@@ -131,6 +151,8 @@ module.exports = (_ => {
                         if(e.methodArguments[2].content.startsWith("!")){
                             e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content.substring(1),KEY);
                             // e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content,USER_KEY+OTHER_KEY);
+                        }else if(e.methodArguments[2].content.startsWith("🔓")){
+                            e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content.substring(2),KEY);
                         }
                     }});
                     BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.MessageUtils, "startEditMessage", {before: e => {
@@ -140,11 +162,6 @@ module.exports = (_ => {
                     }});
                 // }
                 BDFDB.PatchUtils.forceAllUpdates(this);
-                // if(this.boucle!=null){try{clearInterval(this.boucle)}catch(err){}}
-                // this.boucle=setInterval(() => {
-                //     this.decryptall();
-                // },5000);
-                // this.decryptall();
             }
             processChannelTextAreaForm(e) {
                 // console.log(e);
@@ -158,7 +175,7 @@ module.exports = (_ => {
                                 const KEY=document.querySelector("div.da-selected").getAttribute("href").split("/")[3];
                                 const original_message = e2.methodArguments[0];
                                 var message = this.encrypt(original_message.substring(1),KEY);
-                                console.log(KEY,original_message,message);
+                                // console.log(KEY,original_message,message);
                                 // var message = this.encrypt(original_message.substring(1),USER_KEY+OTHER_KEY);
                                 // console.log(USER_KEY,OTHER_KEY,original_message,message);
                                 e2.originalMethod("🔒"+message);
@@ -169,6 +186,17 @@ module.exports = (_ => {
                             }else{
                                 return e2.callOriginalMethodAfterwards();
                             }
+                        }
+                    }, {
+                        force: true,
+                        noCache: true
+                    });
+                }
+                if (!BDFDB.PatchUtils.isPatched(this, e.instance, "handleSendFile")) {
+                    BDFDB.PatchUtils.patch(this, e.instance, "handleSendFile", {
+                        instead: e2 => {
+                            console.log(e2)
+                            return e2.callOriginalMethodAfterwards();
                         }
                     }, {
                         force: true,
