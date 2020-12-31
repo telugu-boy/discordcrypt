@@ -23,7 +23,7 @@ module.exports = (_ => {
         "info": {
             "name": "CryptonaTor",
             "author": "Flo",
-            "version": "1.2.0",
+            "version": "1.3.0",
             "description": "Encrypt message"
         }
     };
