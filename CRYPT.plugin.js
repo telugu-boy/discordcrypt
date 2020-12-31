@@ -23,7 +23,7 @@ module.exports = (_ => {
         "info": {
             "name": "CryptonaTor",
             "author": "Flo",
-            "version": "1.3.0",
+            "version": "1.2.0",
             "description": "Encrypt message"
         }
     };
@@ -102,18 +102,10 @@ module.exports = (_ => {
                         MessageContextMenu:"render"
                     }
                 };
-                // function triling(i) {
-                //     console.log(i)
-                //     setTimeout(function () {
-                //         BdApi.findModuleByProps("playSound").playSound(`message${i%3+1}`, 0.04)
-                //     }, i*5);
-                // }
-
-                // for (var i = 0; i < 10; i++){
-                //     triling(i);
-                // }
+                this.playing=false;
                 let audio = new Audio();
                 audio.src="https://quicksounds.com/uploads/tracks/2032906189_423862276_1845274770.mp3";
+                audio.volume=0.5;
                 audio.play();
             }
 
@@ -128,7 +120,7 @@ module.exports = (_ => {
                 var code = CryptoJS.AES.decrypt(msg, key);
                 try{
                     var decryptedMessage = code.toString(CryptoJS.enc.Utf8);
-                    console.log(decryptedMessage)
+                    // console.log(decryptedMessage)
                     return decryptedMessage;
                 }catch(err){
                     return "🔓ENCRYPTED MESSAGE WITHOUT THE GOOD KEY🔓"
@@ -138,34 +130,63 @@ module.exports = (_ => {
             isBlank(str) {
                 return (!str || /^\s*$/.test(str));
             }
+            funmsg(message){
+                console.log("||",message)
+                switch (message) {
+                    case "rickroll":
+                        if(this.playing==false){
+                            this.playing=true;
+                            var rick=new Audio();
+                            rick.src="https://www.soundboard.com/mediafiles/mt/MTkwNDMxNTIzMTkwNDE4_y68_2b5fePrM4.MP3";
+                            rick.volume=0.1;
+                            rick.play()
+                            setTimeout(() => {
+                                rick.src="";
+                                this.playing=false;
+                            }, 5000);
+                        }
+                        break;
+                
+                    default:
+                        break;
+                }
+            }
             processMessages (e) {
                 let messagesIns = e.returnvalue.props.children;
                 console.log(">>",messagesIns.props);
 				if (BDFDB.ObjectUtils.is(messagesIns.props.messages) && BDFDB.ArrayUtils.is(messagesIns.props.messages._array)) {
                     let messages = messagesIns.props.messages;
                     messagesIns.props.messages._array.forEach((msg, index) => {
-                        if(msg.content.startsWith("🔓▶️")){
-                            let videoID;
-                            // console.log(msg.content.substring(4).match(YTreg),YTreg.exec(msg.content.substring(4))[1])
-                            if(msg.content.substring(4).match(YTreg) && (videoID=YTreg.exec(msg.content.substring(4))[1])){
-                                console.log("EDITED",videoID,msg.id,msg.content.substring(4),msg.id);
-                                setTimeout(() => {
-                                    document.querySelector(`div[id="chat-messages-${msg.id}"] div.da-messageContent`).innerHTML=`<iframe style="width: 100%;height: 20em;" src="https://www.youtube.com/embed/${videoID}" frameborder="0" allowfullscreen></iframe>`;
-                                }, 50);
-                            }
-                        }else if(msg.content.startsWith("🔒")){
+                        if(msg.content.startsWith("🔒")){
                             let decrypted=this.decrypt(msg.content.substring(2),msg.channel_id);
                             let videoID;
                             if(decrypted.match(YTreg) && (videoID=YTreg.exec(decrypted)[1])){
                                 messagesIns.props.messages._array[index].content="🔓▶️"+decrypted;
                                 // console.log(videoID)
                                 setTimeout(() => {
-                                    document.querySelector(`div[id="chat-messages-${msg.id}"] div.da-messageContent`).innerHTML=`<iframe style="width: 100%;height: 20em;" src="https://www.youtube.com/embed/${videoID}" frameborder="0" allowfullscreen></iframe>`;
+                                    const chat_msg=document.querySelector(`div[id="chat-messages-${msg.id}"] div.da-messageContent`)
+                                    if(!chat_msg.querySelector("iframe")){
+                                        chat_msg.innerHTML=`<iframe style="width: 100%;height: 20em;" src="https://www.youtube.com/embed/${videoID}" frameborder="0" allowfullscreen></iframe>`;
+                                    }   
                                 }, 50);
                             }else{
                                 messagesIns.props.messages._array[index].content="🔓"+decrypted;
+                                this.funmsg(decrypted)
                             }
                             // console.log("🔒",msg.channel_id);
+                        }
+                        if(msg.content.startsWith("🔓▶️")){
+                            let videoID;
+                            // console.log(msg.content.substring(4).match(YTreg),YTreg.exec(msg.content.substring(4))[1])
+                            if(msg.content.match(YTreg) && (videoID=YTreg.exec(msg.content.substring(4))[1])){
+                                // console.log("EDITED",videoID,msg.id,msg.content.substring(4),msg.id);
+                                setTimeout(() => {
+                                    const chat_msg=document.querySelector(`div[id="chat-messages-${msg.id}"] div.da-messageContent`)
+                                    if(!chat_msg.querySelector("iframe")){
+                                        chat_msg.innerHTML=`<iframe style="width: 100%;height: 20em;" src="https://www.youtube.com/embed/${videoID}" frameborder="0" allowfullscreen></iframe>`;
+                                    }
+                                }, 50);
+                            }
                         }
                     });
 				}
@@ -173,21 +194,19 @@ module.exports = (_ => {
             onStart() {
                 // if (!BDFDB.PatchUtils.isPatched(this, e.instance, "editMessage")) {
                     BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.MessageUtils, "editMessage", {before: e => {
-                        console.log(e)
-                        // const OTHER_KEY=document.querySelector('a.da-selected div[role="img"]').getAttribute("user_by_bdfdb");
+                        // console.log(e)
                         const KEY=document.querySelector("div.da-selected").getAttribute("href").split("/")[3];
                         if(e.methodArguments[2].content.startsWith("!")){
-                            e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content.substring(1),KEY);
-                            // e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content,USER_KEY+OTHER_KEY);
+                            e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content.substring(1),KEY)
                         }else if(e.methodArguments[2].content.startsWith("🔓")){
                             e.methodArguments[2].content="🔒"+this.encrypt(e.methodArguments[2].content.substring(2),KEY);
                         }
                     }});
-                    BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.MessageUtils, "startEditMessage", {before: e => {
-                        if(e.methodArguments[1].startsWith("🔓")){
-                            e.methodArguments[1]=!+e.methodArguments[1].substring(2);
-                        }
-                    }});
+                    // BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.MessageUtils, "startEditMessage", {before: e => {
+                    //     if(e.methodArguments[1].startsWith("🔓")){
+                    //         e.methodArguments[1]=!+e.methodArguments[1].substring(2);
+                    //     }
+                    // }});
                 // }
                 BDFDB.PatchUtils.forceAllUpdates(this);
             }
@@ -199,13 +218,9 @@ module.exports = (_ => {
                             console.log(e2)
                             if(e2.methodArguments[0].startsWith("!") && !this.isBlank(e2.methodArguments[0].substring(1))){
                                 e2.stopOriginalMethodCall();
-                                // const OTHER_KEY=document.querySelector('a.da-selected div[role="img"]').getAttribute("user_by_bdfdb");
                                 const KEY=document.querySelector("div.da-selected").getAttribute("href").split("/")[3];
                                 const original_message = e2.methodArguments[0];
                                 var message = this.encrypt(original_message.substring(1),KEY);
-                                // console.log(KEY,original_message,message);
-                                // var message = this.encrypt(original_message.substring(1),USER_KEY+OTHER_KEY);
-                                // console.log(USER_KEY,OTHER_KEY,original_message,message);
                                 e2.originalMethod("🔒"+message);
                                 return Promise.resolve({
                                     shouldClear: true,
@@ -233,7 +248,7 @@ module.exports = (_ => {
                 }
             }
             // processChannelTextAreaContainer (e) {
-            //     console.log(e)
+            //     console.log("<<",e)
 			// 	if (e.returnvalue.props.ref && e.returnvalue.props.ref.current && BDFDB.DOMUtils.getParent(BDFDB.dotCN.chatform, e.returnvalue.props.ref.current)) {
             //         let [children, index] = BDFDB.ReactUtils.findParent(e.returnvalue, {name: "SlateCharacterCount"});
             //         console.log("##",children,index)
@@ -254,10 +269,10 @@ module.exports = (_ => {
             // processAttachment (e) {
             //     console.log("FILE",e)
             // }
-            // onMessageContextMenu (e) {
-            //     console.log("contxtmenu",e);
+            onMessageContextMenu (e) {
+                console.log("contxtmenu",e);
 				
-			// }
+			}
         };
     })(window.BDFDB_Global.PluginUtils.buildPlugin(config));
 })();
